@@ -1,0 +1,1 @@
+prun -np 1 -native '--time=00:15:00 -N 1 -C Titan --gres=gpu:1 ' ./matmul ./arc130.mtx  ./arc130.mtx ./output.mtx
