@@ -1,9 +1,9 @@
 # See LICENSE.txt for license details.
 
-CXX_FLAGS += -std=c++11 -O3 -Wall
+CXX_FLAGS += -std=c++11 -O3 -Wall -mavx2
 PAR_FLAG = -fopenmp
 #GENERATE = -D GENERATE
-GENERATE = 
+GENERATE =
 TIMING = -D TIMING
 
 ifneq (,$(findstring icpc,$(CXX)))
