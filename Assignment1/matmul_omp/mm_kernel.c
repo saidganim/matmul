@@ -8,7 +8,7 @@ void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
   __m256 temp_i;
   float rest;
   float res[VSIZE];
-  #pragma omp parallel for num_threads(2) private(i,j,k,temp,temp_i,rest,res)
+  #pragma omp parallel for private(i,j,k,temp,temp_i,rest,res)
   for(i=0; i<m; i++) {
     for(j=0; j<p; j++) {
       temp = _mm256_set1_ps(0.0);
