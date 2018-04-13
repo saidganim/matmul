@@ -19,10 +19,8 @@ void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
         temp_i = _mm256_mul_ps(_mm256_loadu_ps(&A[i*n+k]), _mm256_loadu_ps(&B[j*n+k]));
         temp = _mm256_add_ps(temp, temp_i);
       }
-      printf("K = %d\n", k);
       for(; k < n; ++k){
         rest += A[i*n+k]*B[j*n+k];
-        printf("LOLOLO %d\n", k);
       }
       // Finish vectorizing to save
       _mm256_storeu_ps(res, temp);
