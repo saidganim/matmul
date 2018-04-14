@@ -182,7 +182,7 @@ int main (int argc, char** argv) {
 //repeat the code multiple time, for a more accurate measurement.
 for (r=0; r<REP; r++)
  /* Call the matrix multiplication kernel. */
- matrix_mult(m,n,p,A,T,C);
+ matrix_mult(m,n,p,A,B,C);
 
 #ifdef TIMING
   gettimeofday(&after, NULL);
@@ -202,7 +202,6 @@ for (r=0; r<REP; r++)
  free(A);
  free(B);
  free(C);
- free(T);
 // free(C2);
 
 }
