@@ -1,9 +1,10 @@
-extern "C"
-{
-#include "mm_kernel.h"
-}
-#include <cuda.h>
 
+
+#include "mm_kernel.h"
+
+#include <cuda.h>
+#include <sys/time.h>
+#include <stdio.h>
 
 __global__ void matrix_kernel(int m, int n, int p, float* A, float* B, float* C){
 
@@ -21,9 +22,9 @@ __global__ void matrix_kernel(int m, int n, int p, float* A, float* B, float* C)
 }
 
 
-extern "C"
 void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
   //int i, j, k;
+	struct timeval start, end;
 	int threadBlock = 512;
 	float *dA, *dB, *dC;
 	cudaMalloc(&dA, m * n * sizeof(float));
@@ -37,8 +38,11 @@ void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
 
 	cudaMemcpy(dA, A, m*n*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dB, B, p*n*sizeof(float), cudaMemcpyHostToDevice);
-
+	gettimeofday(&start, 0);
 	matrix_kernel<<<m * n / threadBlock + 1, threadBlock>>>(m,n,p,dA,dB,dC);
+	cudaDeviceSynchronize();
+	gettimeofday(&end, 0);
+	printf("time without memory copy = %f\n", end.tv_sec + end.tv_usec/1000000.0 - (start.tv_sec + start.tv_usec / 1000000.0));
 	cudaMemcpy(C, dC, m*p*sizeof(float), cudaMemcpyDeviceToHost);
 
 //  for(i=0; i<m; i++) {
