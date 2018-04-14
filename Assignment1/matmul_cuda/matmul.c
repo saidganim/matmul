@@ -28,16 +28,6 @@ void generate_mat(int m, int n, int p, float *A, float *B) {
 
 }
 
-void transpose(int m, int n, float *A, float *B) {
-   int i, j;
-
-   for(i=0; i<m; i++) {
-      for(j=0; j<n; j++) {
-         B[i+j*m] = A[i*n+j];
-      }
-   }
-}
-
 void read_sparse(FILE *f, int m, int n, int nz, float *A) {
   int i, row, col;
   float val;
@@ -136,7 +126,7 @@ int read_mat(int *m, int *n, int *p, int *nzA, int *nzB, FILE* fa, FILE *fb) {
 }
 
 int main (int argc, char** argv) {
- float *A, *B, *T, *C;
+ float *A, *B, *C;
  struct timeval before, after;
  int m, n, p, r, err;
  int nzA=0, nzB=0;
@@ -165,8 +155,6 @@ int main (int argc, char** argv) {
  if (A==NULL) {printf("Out of memory A! \n"); exit(1);}
  B = (float *)calloc(n*p,sizeof(float));
  if (B==NULL) {printf("Out of memory B! \n"); exit(1);}
- T = (float *)calloc(n*p,sizeof(float));
- if (B==NULL) {printf("Out of memory B! \n"); exit(1);}
 
 #ifdef GENERATE
    generate_mat(m,n,p,A,B);
@@ -182,8 +170,6 @@ int main (int argc, char** argv) {
    fclose(fa);
    fclose(fb);
 #endif
-
- transpose(n, p, B, T);
 
  C = (float *)calloc(m*p,sizeof(float));
  if (C==NULL) {printf("Out of memory C1! \n"); exit(1);}

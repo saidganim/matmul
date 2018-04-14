@@ -12,11 +12,11 @@ __global__ void matrix_kernel(int m, int n, int p, float* A, float* B, float* C)
 	unsigned j = i % p;
 	i = i / p;
 
-	if(i >= m || j >= p)
+	if(i >= m)
 		return;
 
 	for(int k=0; k<n; k++) {
-	        C[i*p+j] += A[i*n+k]*B[j*n+k];
+	        C[i*p+j] += A[i*n+k]*B[k*p+j];
 	}
 
 }
@@ -39,7 +39,7 @@ void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
 	cudaMemcpy(dA, A, m*n*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dB, B, p*n*sizeof(float), cudaMemcpyHostToDevice);
 	gettimeofday(&start, 0);
-	matrix_kernel<<<m * n / threadBlock + 1, threadBlock>>>(m,n,p,dA,dB,dC);
+	matrix_kernel<<<m * p / threadBlock + 1, threadBlock>>>(m,n,p,dA,dB,dC);
 	cudaDeviceSynchronize();
 	gettimeofday(&end, 0);
 	printf("time without memory copy = %f\n", end.tv_sec + end.tv_usec/1000000.0 - (start.tv_sec + start.tv_usec / 1000000.0));
