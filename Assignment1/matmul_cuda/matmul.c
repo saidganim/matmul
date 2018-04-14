@@ -18,18 +18,30 @@
 
 #define REP 10
 
+extern void transpose(int m, int n, float *A, float *B) ;
+
 void generate_mat(int m, int n, int p, float *A, float *B) {
   int i;
 
-  for (i=0; i<(m*n); i++) A[i] = 1; //i/10; 
+  for (i=0; i<(m*n); i++) A[i] = 1; //i/10;
   for (i=0; i<(n*p); i++) B[i] = 1; //i/5;
 
 }
 
+void transpose(int m, int n, float *A, float *B) {
+   int i, j;
+
+   for(i=0; i<m; i++) {
+      for(j=0; j<n; j++) {
+         B[i+j*m] = A[i*n+j];
+      }
+   }
+}
+
 void read_sparse(FILE *f, int m, int n, int nz, float *A) {
   int i, row, col;
-  float val;  
- 
+  float val;
+
     for (i=0; i<nz; i++)
     {
         fscanf(f, "%d %d %f\n", &row, &col, &val);
@@ -39,21 +51,21 @@ void read_sparse(FILE *f, int m, int n, int nz, float *A) {
 }
 
 void write_sparse(FILE *f, int m, int p, const float *C) {
-   int i, nz=0; 
+   int i, nz=0;
    MM_typecode matcode;
 
-   for (i=0; i<m*p; i++) if (C[i] != 0.0) nz++; 
+   for (i=0; i<m*p; i++) if (C[i] != 0.0) nz++;
 
     mm_initialize_typecode(&matcode);
     mm_set_matrix(&matcode);
     mm_set_coordinate(&matcode);
     mm_set_real(&matcode);
 
-    mm_write_banner(f, matcode); 
+    mm_write_banner(f, matcode);
     mm_write_mtx_crd_size(f, m, p, nz);
 
     for (i=0; i<m*p; i++) {
-	if (C[i] != 0.0) 
+	if (C[i] != 0.0)
           fprintf(f, "%d %d %f\n", i/p+1, i%p+1, C[i]);
     }
 
@@ -62,18 +74,18 @@ void write_sparse(FILE *f, int m, int p, const float *C) {
 void read_dense(FILE *f, int m, int n, float *A) {
   int row, col;
 
-  for(row=0; row<m; row++) { 
+  for(row=0; row<m; row++) {
      for (col=0; col<n; col++) {
-        fscanf(f, "%f ", &A[row*n+col]); 
+        fscanf(f, "%f ", &A[row*n+col]);
 //	printf("%20.19f \n", A[row*(*n)+col]);
      }
-  } 
+  }
 }
 
 
 int read_mat(int *m, int *n, int *p, int *nzA, int *nzB, FILE* fa, FILE *fb) {
   MM_typecode ta, tb;
-  int ret_code; 
+  int ret_code;
   int n1;
 
   if (mm_read_banner(fa, &ta) != 0)
@@ -81,14 +93,14 @@ int read_mat(int *m, int *n, int *p, int *nzA, int *nzB, FILE* fa, FILE *fb) {
         printf("Could not process Matrix Market banneri for A.\n");
         return -3;
     }
-  if (mm_read_banner(fb, &tb) != 0) 
+  if (mm_read_banner(fb, &tb) != 0)
     {
         printf("Could not process Matrix Market banner for B.\n");
-        return -4;        
+        return -4;
     }
 
   if (mm_is_complex(ta)) return -6;
-  if (mm_is_complex(tb)) return -7; 
+  if (mm_is_complex(tb)) return -7;
 
   if (mm_is_matrix(ta) && mm_is_sparse(ta))
     {
@@ -101,7 +113,7 @@ int read_mat(int *m, int *n, int *p, int *nzA, int *nzB, FILE* fa, FILE *fb) {
            return -11;
 
     }
-  else return -8; 
+  else return -8;
 
 
   if (mm_is_matrix(tb) && mm_is_sparse(tb))
@@ -113,26 +125,26 @@ int read_mat(int *m, int *n, int *p, int *nzA, int *nzB, FILE* fa, FILE *fb) {
 	*nzB = 0;
         if ((ret_code = mm_read_mtx_array_size(fb, &n1, p)) !=0)
            return -11;
-  
+
     }
   else return -9;
-  
+
   if (*n!=n1) return -15;
-  
+
   return 0;
     /* find out size of sparse matrix .... */
 }
 
 int main (int argc, char** argv) {
- float *A, *B, *C;
+ float *A, *B, *T, *C;
  struct timeval before, after;
  int m, n, p, r, err;
  int nzA=0, nzB=0;
- FILE *fa, *fb, *fc; 
- 
-#ifdef GENERATE 
+ FILE *fa, *fb, *fc;
+
+#ifdef GENERATE
  m=M; n=N; p=P;
-#else 
+#else
  if (argc < 3) {
     fprintf(stderr, "Usage: %s [matrix1] [matrix2] [resultmatrix] \n", argv[0]);
     exit(1);
@@ -140,10 +152,10 @@ int main (int argc, char** argv) {
  else {
     if ((fa = fopen(argv[1], "rt")) == NULL) exit(1);
     if ((fb = fopen(argv[2], "rt")) == NULL) exit(2);
-    err = read_mat(&m, &n, &p, &nzA, &nzB, fa,fb);    
+    err = read_mat(&m, &n, &p, &nzA, &nzB, fa,fb);
     if (err == -15) {
 	printf("Matrices are incompatible! \n");
-	fclose(fa); fclose(fb); 
+	fclose(fa); fclose(fb);
 	exit(1);
     }
  }
@@ -153,34 +165,38 @@ int main (int argc, char** argv) {
  if (A==NULL) {printf("Out of memory A! \n"); exit(1);}
  B = (float *)calloc(n*p,sizeof(float));
  if (B==NULL) {printf("Out of memory B! \n"); exit(1);}
+ T = (float *)calloc(n*p,sizeof(float));
+ if (B==NULL) {printf("Out of memory B! \n"); exit(1);}
 
 #ifdef GENERATE
    generate_mat(m,n,p,A,B);
-#else 
+#else
    if (nzA>0)
 	read_sparse(fa, m,n,nzA, A);
-   else 
+   else
 	read_dense(fa, m,n, A);
    if (nzB>0)
         read_sparse(fb, n,p, nzB, B);
    else
-        read_dense(fb, n,p, B); 
-   fclose(fa); 
+        read_dense(fb, n,p, B);
+   fclose(fa);
    fclose(fb);
 #endif
+
+ transpose(n, p, B, T);
 
  C = (float *)calloc(m*p,sizeof(float));
  if (C==NULL) {printf("Out of memory C1! \n"); exit(1);}
 
-//naive implementation 
+//naive implementation
 #ifdef TIMING
-  gettimeofday(&before, NULL); 
+  gettimeofday(&before, NULL);
 #endif
 
 //repeat the code multiple time, for a more accurate measurement.
-for (r=0; r<REP; r++) 
+for (r=0; r<REP; r++)
  /* Call the matrix multiplication kernel. */
- matrix_mult(m,n,p,A,B,C);
+ matrix_mult(m,n,p,A,T,C);
 
 #ifdef TIMING
   gettimeofday(&after, NULL);
@@ -190,17 +206,17 @@ for (r=0; r<REP; r++)
 #endif
 
 #ifdef GENERATE
- if ((fc = fopen("gen_result.mtx", "wt")) == NULL) exit(3); 
-#else 
- if ((fc = fopen(argv[3], "wt")) == NULL) exit(3); 
-#endif   
+ if ((fc = fopen("gen_result.mtx", "wt")) == NULL) exit(3);
+#else
+ if ((fc = fopen(argv[3], "wt")) == NULL) exit(3);
+#endif
  write_sparse(fc,m,p,C);
- fclose(fc);  
+ fclose(fc);
 
  free(A);
  free(B);
  free(C);
+ free(T);
 // free(C2);
 
 }
-

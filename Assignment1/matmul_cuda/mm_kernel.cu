@@ -11,12 +11,12 @@ __global__ void matrix_kernel(int m, int n, int p, float* A, float* B, float* C)
 	unsigned i = blockDim.x * blockIdx.x + threadIdx.x;
 	unsigned j = i % p;
 	i = i / p;
-	
+
 	if(i >= m || j >= p)
 		return;
-	
+
 	for(int k=0; k<n; k++) {
-	        C[i*p+j] += A[i*n+k]*B[k*p+j];
+	        C[i*p+j] += A[i*n+k]*B[j*n+k];
 	}
 
 }
@@ -30,7 +30,7 @@ void matrix_mult(int m, int n, int p, float *A, float *B, float *C) {
 	cudaMalloc(&dA, m * n * sizeof(float));
 	cudaMalloc(&dB, p * n * sizeof(float));
 	cudaMalloc(&dC, m * p * sizeof(float));
-	
+
 	//if(cudaGetLastError != cudaSuccess){
 	//	printf("CUDA_ERROR\n");
 	//	exit(1);
